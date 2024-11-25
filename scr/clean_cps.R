@@ -26,18 +26,13 @@ cps<-read.csv("data/cps_00005.csv")
 # look at a few lines of data
 head(cps[,c("CPSID","PERNUM","FSSTATUS","FSSTATUSMD","RACE","EDUC")]) %>% kable
 
-# look at more secribtive labels for regerence
-map_chr(cps,~attr(.x,"label"))%>%
-  bind_cols(names=names(cps),question=.) %>%
-  rownames_to_column(var="VariableName") %>%kable
-
 # look at CPS
 table(cps$STATEFIP)
 
 ##### CLEAN CPS DATA #####
 
-#savethiscodeintoasrcfoldernamedclean_cps.R
-#you'llalsosavecodecalledclean_acs.R...
+#save this code into a src folder named clean_cps.R
+#you'll also save code called clean_acs.R...
 #andhopefullymultipleanalysisfiles-oneforeachoftheYvariablesyouchoose tomodel.
 #youranalysisfilescansourceclean_cps.Rusingthesource()function
 #eachrow ofcpsisaniNDIVIDUALwithinafamily
