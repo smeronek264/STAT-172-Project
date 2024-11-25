@@ -30,3 +30,30 @@ acs<-acs%>%
   arrange(desc(Sex), desc(Age)) %>%
   mutate(weight= first(wt))%>%select(-wt) %>%ungroup()
 
+
+#createsamevariablesasinCPS
+acs<-acs%>%
+  mutate(SEX=Sex-1, #since female=2
+         CHILD= ifelse(Age< 18,1, 0),#SAMEascpsdefinition
+         ELDERLY= ifelse(Age > 60,1,0),#SAMEascpsdefinition
+         BLACK= ifelse(Race==2,1,0), #SAMEascpsdefinition(seedatadictionary)
+         HISPANIC=ifelse(Hispanic>0,1,0), #SAMEascpsdefinition(seedatadictionary)
+         EDUC= as.integer(Education%in%c(3,4)),
+         MARRIED= as.integer(Mar %in%c(1)),
+         PUMA= as.factor(PUMA))
+#aggregateuptofamilylevel
+acs_data<-acs %>%
+  group_by(serialno=as.factor(serialno)) %>%
+  summarise(PUMA= first(PUMA),
+            hhsize= length(serialno),
+            #countsofpeoplewithvariousfeatures-justlikeforCPS
+            female= sum(SEX),
+            hispanic= sum(HISPANIC),
+            black= sum(BLACK),
+            kids= sum(CHILD),
+            elderly= sum(ELDERLY),
+            education= sum(EDUC),
+            married= sum(MARRIED),
+            weight = weight[1],
+  )
+            
