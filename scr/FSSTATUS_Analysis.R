@@ -102,7 +102,7 @@ lr_ridge_coeff
 ggplot() +
   geom_point(aes(lr_lasso_coeff, lr_lasso_coeff)) + 
   geom_abline(aes(slope=1, intercept = 0)) +
-  xlim(c(-10, 10)) + ylim(x(-10, 10))
+  xlim(c(-10, 10)) + ylim(c(-10, 10))
 
 # if time allows compare to MLE coessifcents too
 

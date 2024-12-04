@@ -16,6 +16,8 @@ source("code/clean_acs.R") # clean ACS
 # Potential X Variables:
 # hhsize, female, hispanic, black, kids, elderly, education, married, faminc
 
+table(cps_data$Kitchen.Qual)
+
 
 ##### SPLITTING DATA #####
 
@@ -23,9 +25,13 @@ cps_data = subset(cps_data, select = -c(FSTOTXPNC_perpers, FSSTATUSMD, FSSTATUS,
 
 cps_data = cps_data[complete.cases(cps_data), ]
 
-RNGkind(sample.kind = "default")
 
+# Setting the seed to make sure the code can be reproduced on other machines
+RNGkind(sample.kind = "default")
 set.seed(122111598)
+
+# Splitting up the data into test and train data.  70% of the data will be going
+# to train the data and 30% will go to testing the data
 
 train.idx = sample(x=1:nrow(cps_data), size = floor(.7*nrow(cps_data)))
 
@@ -78,10 +84,8 @@ plot(lr_lasso_cv)
 plot(lr_ridge_cv)
 
 best_lasso_lambda = lr_lasso_cv$lambda.min
-# lambda is around 0.00015836
 
 best_ridge_lambda = lr_ridge_cv$lambda.min
-# lambda is around 0.00735024
 
 ##### COEFFICIENTS #####
 # see the coeffiencets for the model that minimizes our of sample error
@@ -98,7 +102,7 @@ lr_ridge_coeff
 ggplot() +
   geom_point(aes(lr_lasso_coeff, lr_lasso_coeff)) + 
   geom_abline(aes(slope=1, intercept = 0)) +
-  xlim(c(-10, 10)) + ylim(x(-10, 10))
+  xlim(c(-10, 10)) + ylim(c(-10, 10))
 
 # if time allows compare to MLE coessifcents too
 
@@ -145,6 +149,11 @@ ridge_rocCurve = roc(response = as.factor(test.df.preds$FSFOODS),
                      levels = c("0", "1"))
 
 
+plot(lasso_rocCurve, print.thres = TRUE, print.auc = TRUE)
+
+plot(ridge_rocCurve, print.thres = TRUE, print.auc = TRUE)
+
+
 #make data frame of lasso ROC info
 lasso_data <- data.frame(
   Model = "Lasso",
@@ -174,3 +183,13 @@ ggplot() +
   labs(x = "1 - Specificity", y = "Sensitivity", color = "Model") +
   theme_minimal()
 
+
+##### PREDICTING ACS #####
+
+acs_data = acs_data %>% 
+  mutate(
+    # note: ridge and lasso get the MATRIX
+    lasso_pred = predict(final_lasso, acs_data, type = "response")[,1],
+    ridge_pred = predict(final_ridge, acs_data, type = "response")[,1]
+    # note: all need tyoe = "response" so we don;t get log-odds
+  )

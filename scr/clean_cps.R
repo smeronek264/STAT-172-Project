@@ -20,6 +20,8 @@ library(logistf)
 library(glmnet)
 library(haven)
 library(knitr)
+library(dplyr)
+
 
 # load in the data
 cps<-read.csv("data/cps_00006.csv")
@@ -37,7 +39,6 @@ cps<-cps%>%
          DIFF= ifelse(DIFFANY==2,1,0),
          COUNTY=as.factor(COUNTY))
 
-library(dplyr)
 
 # Assuming your dataset is called `cps_data`
 cps <- cps %>%
@@ -223,4 +224,3 @@ cps_data<-cps_data %>%
 
 #Note: many of our y variables contain some NA values.
 #Do not use complete.cases or na.omit on the whole dataset.
-
