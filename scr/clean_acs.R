@@ -1,5 +1,6 @@
 # clear the environment
-rm(list=ls())
+# rm(list=ls()) Only run this line of code if you are testing the code
+# otherwise it will erase all contents when doing source()
 
 # install packages (SHOULD ONLY DO THIS IF YOU DON"T HAVE THEM)
 # Will comment out the following code since I have all the libraries
@@ -35,12 +36,14 @@ acs<-acs%>%
 acs<-acs%>%
   mutate(SEX=Sex-1, #since female=2
          CHILD= ifelse(Age< 18,1, 0),#SAMEascpsdefinition
-         ELDERLY= ifelse(Age > 60,1,0),#SAMEascpsdefinition
+         ELDERLY= ifelse(Age > 64,1,0),#SAMEascpsdefinition
          BLACK= ifelse(Race==2,1,0), #SAMEascpsdefinition(seedatadictionary)
          HISPANIC=ifelse(Hispanic>0,1,0), #SAMEascpsdefinition(seedatadictionary)
          EDUC= as.integer(Education%in%c(3,4)),
          MARRIED= as.integer(Mar %in%c(1)),
          PUMA= as.factor(PUMA))
+
+
 #aggregateuptofamilylevel
 acs_data<-acs %>%
   group_by(serialno=as.factor(serialno)) %>%
@@ -54,6 +57,9 @@ acs_data<-acs %>%
             elderly= sum(ELDERLY),
             education= sum(EDUC),
             married= sum(MARRIED),
+            income= first(AGI),
             weight = weight[1],
   )
             
+
+summary(acs)
