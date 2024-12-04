@@ -1,2 +1,4 @@
 # STAT 172 Project
  
+FSTOTXPCT
+FSBAL
