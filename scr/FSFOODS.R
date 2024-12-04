@@ -1,9 +1,5 @@
 rm(list=ls())
 
-# Loading the Data
-source("code/clean_cps.R") # clean CPS
-source("code/clean_acs.R") # clean ACS
-
 library(ggplot2)
 library(RColorBrewer)
 library(tidyverse) # for plotting
@@ -11,45 +7,17 @@ library(pROC)
 library(glmnet) # for fitting lasso, ridge regressions (GLMs)
 library(lubridate) # for easily manipulating dates
 
-
+# Loading the Data
+source("code/clean_cps.R") # clean CPS
+source("code/clean_acs.R") # clean ACS
 
 ##### EXPLORATORY ANALYSIS #####
 
 # Potential X Variables:
 # hhsize, female, hispanic, black, kids, elderly, education, married, faminc
 
-ggplot(data = cps_data) +
-  geom_bar(aes(x=hhsize))
 
-ggplot(data = cps_data) +
-  geom_bar(aes(x=female))
-
-ggplot(data = cps_data) +
-  geom_bar(aes(x=hispanic))
-
-ggplot(data = cps_data) +
-  geom_bar(aes(x=black))
-
-ggplot(data = cps_data) +
-  geom_bar(aes(x=kids))
-
-ggplot(data = cps_data) +
-  geom_bar(aes(x=elderly))
-
-ggplot(data = cps_data) +
-  geom_bar(aes(x=education))
-
-ggplot(data = cps_data) +
-  geom_histogram(aes(x=faminc))
-
-ggplot(data = cps_data) +
-  geom_bar(aes(x=married))
-
-
-
-
-#####Random Forest #####
-# Using the random forest to figure out important x variables
+##### SPLITTING DATA #####
 
 cps_data = subset(cps_data, select = -c(FSTOTXPNC_perpers, FSSTATUSMD, FSSTATUS, FSWROUTY, FSBAL, FSRAWSCRA, FSTOTXPNC))
 
@@ -78,8 +46,8 @@ test.df = cps_data[-train.idx,]
 # hat changes with lasso/ridge = the REQUIRE MATRICES
 # psty of that means one-hot-coding ary factors
 
-x.train = model.matrix(FSFOODS ~ weight + hhsize + female + hispanic + black  + kids + elderly + education + married + faminc, data = train.df)[, -1]
-x.test = model.matrix(FSFOODS ~., data = test.df)[, -1]
+x.train = model.matrix(FSFOODS ~ hhsize + female + hispanic + black  + kids + elderly + education + married + faminc, data = train.df)[, -1]
+x.test = model.matrix(FSFOODS ~ hhsize + female + hispanic + black  + kids + elderly + education + married + faminc, data = test.df)[, -1]
 
 # x.train and x.test have the same infor as train.df and test.df, but 
 # they are matrices
@@ -92,12 +60,14 @@ y.test = as.vector(test.df$FSFOODS)
 lr_lasso_cv = cv.glmnet(x.train, # train MATRIX - without y 
                         y.train, # train y VECTOR = y column
                         family=binomial(link=logit),
+                        weights = as.integer(train.df$weight),
                         alpha = 1)
 
 lr_ridge_cv = cv.glmnet(x.train, # train MATRIX - without y 
                         y.train, # train y VECTOR = y column
                         family=binomial(link=logit),
-                        alpha = 0)                        
+                        weights = as.integer(train.df$weight),
+                        alpha = 1)                       
 
 # these models try a range of lambda values (differing penalty parameters)
 # and then use CV to resitmate out of sample error of each lambda
@@ -139,11 +109,13 @@ ggplot() +
 
 final_lasso = glmnet(x.train, y.train,
                      family = binomial(link = "logit"),
+                     weights = as.integer(train.df$weight),
                      alpha = 1,
                      lambda = best_lasso_lambda)
 
 final_ridge = glmnet(x.train, y.train,
                      family = binomial(link = "logit"),
+                     weights = as.integer(train.df$weight),
                      alpha = 1,
                      lambda = best_ridge_lambda)
 
@@ -164,26 +136,15 @@ test.df.preds = test.df %>%
 
 # FIT ROC CURVE
 
-mle_rocCurve = roc(response = as.factor(test.df.preds$popular_bin),
-                   predictor = test.df.preds$mle_pred,
-                   levels = c("0", "1"))
 
-lasso_rocCurve = roc(response = as.factor(test.df.preds$popular_bin),
+lasso_rocCurve = roc(response = as.factor(test.df.preds$FSFOODS),
                      predictor = test.df.preds$lasso_pred,
                      levels = c("0", "1"))
-ridge_rocCurve = roc(response = as.factor(test.df.preds$popular_bin),
+ridge_rocCurve = roc(response = as.factor(test.df.preds$FSFOODS),
                      predictor = test.df.preds$ridge_pred,
                      levels = c("0", "1"))
 
 
-
-#make data frame of MLE ROC info
-mle_data <- data.frame(
-  Model = "MLE",
-  Specificity = mle_rocCurve$specificities,
-  Sensitivity = mle_rocCurve$sensitivities,
-  AUC = as.numeric(mle_rocCurve$auc)
-)
 #make data frame of lasso ROC info
 lasso_data <- data.frame(
   Model = "Lasso",
@@ -200,7 +161,7 @@ ridge_data <- data.frame(
 )
 
 # Combine all the data frames
-roc_data <- rbind(mle_data, lasso_data, ridge_data)
+roc_data <- rbind( lasso_data, ridge_data)
 
 
 # Plot the data
@@ -212,17 +173,4 @@ ggplot() +
   scale_colour_brewer(palette = "Paired") +
   labs(x = "1 - Specificity", y = "Sensitivity", color = "Model") +
   theme_minimal()
-
-
-
-
-
-
-
-
-
-
-
-
-
 
