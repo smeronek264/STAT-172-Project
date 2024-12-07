@@ -50,8 +50,8 @@ test.df = cps_data[-train.idx,]
 # hat changes with lasso/ridge = the REQUIRE MATRICES
 # psty of that means one-hot-coding ary factors
 
-x.train = model.matrix(FSSTATUS ~ hhsize + female + hispanic + black  + kids + elderly + education + married + faminc, data = train.df)[, -1]
-x.test = model.matrix(FSSTATUS ~ hhsize + female + hispanic + black  + kids + elderly + education + married + faminc, data = test.df)[, -1]
+x.train = model.matrix(FSSTATUS ~ hhsize + female + hispanic + black  + kids + elderly + education + married, data = train.df)[, -1]
+x.test = model.matrix(FSSTATUS ~ hhsize + female + hispanic + black  + kids + elderly + education + married, data = test.df)[, -1]
 
 # x.train and x.test have the same infor as train.df and test.df, but 
 # they are matrices
@@ -71,7 +71,7 @@ lr_ridge_cv = cv.glmnet(x.train, # train MATRIX - without y
                         y.train, # train y VECTOR = y column
                         family=binomial(link=logit),
                         weights = as.integer(train.df$weight),
-                        alpha = 1)                       
+                        alpha = 0)                       
 
 # these models try a range of lambda values (differing penalty parameters)
 # and then use CV to resitmate out of sample error of each lambda
@@ -86,6 +86,20 @@ best_lasso_lambda = lr_lasso_cv$lambda.min
 
 best_ridge_lambda = lr_ridge_cv$lambda.min
 # lambda is around 0.00735024
+
+##### FIT FINAL MODELS #####
+
+final_lasso = glmnet(x.train, y.train,
+                     family = binomial(link = "logit"),
+                     weights = as.integer(train.df$weight),
+                     alpha = 1,
+                     lambda = best_lasso_lambda)
+
+final_ridge = glmnet(x.train, y.train,
+                     family = binomial(link = "logit"),
+                     weights = as.integer(train.df$weight),
+                     alpha = 0,
+                     lambda = best_ridge_lambda)
 
 ##### COEFFICIENTS #####
 # see the coeffiencets for the model that minimizes our of sample error
@@ -109,19 +123,7 @@ ggplot() +
 #So while the mdoels (random +_ systematic ) are all the same
 # but the coefficenta are vasly different because fo penalized methos
 
-##### FIT FINAL MODELS #####
 
-final_lasso = glmnet(x.train, y.train,
-                     family = binomial(link = "logit"),
-                     weights = as.integer(train.df$weight),
-                     alpha = 1,
-                     lambda = best_lasso_lambda)
-
-final_ridge = glmnet(x.train, y.train,
-                     family = binomial(link = "logit"),
-                     weights = as.integer(train.df$weight),
-                     alpha = 1,
-                     lambda = best_ridge_lambda)
 
 ##### QUANTIFY PREDICTIONS PERFORMANCE OF ALL 3 MODELS ####
 
@@ -144,10 +146,21 @@ test.df.preds = test.df %>%
 lasso_rocCurve = roc(response = as.factor(test.df.preds$FSSTATUS),
                      predictor = test.df.preds$lasso_pred,
                      levels = c("0", "1"))
+
 ridge_rocCurve = roc(response = as.factor(test.df.preds$FSSTATUS),
                      predictor = test.df.preds$ridge_pred,
                      levels = c("0", "1"))
 
+
+plot(lasso_rocCurve, print.thres = TRUE, print.auc = TRUE)
+
+plot(ridge_rocCurve, print.thres = TRUE, print.auc = TRUE)
+
+lasso_pi_star = coords(lasso_rocCurve, "best", ret = "threshold")$threshold[1]
+test.df$lasso_pred = as.factor(ifelse(test.df.preds$lasso_pred > lasso_pi_star, "1", "0"))
+
+ridge_pi_star = coords(ridge_rocCurve, "best", ret = "threshold")$threshold[1]
+test.df$ridge_pred = as.factor(ifelse(test.df.preds$ridge_pred > ridge_pi_star, "1", "0"))
 
 #make data frame of lasso ROC info
 lasso_data <- data.frame(
@@ -164,6 +177,8 @@ ridge_data <- data.frame(
   AUC = ridge_rocCurve$auc%>% as.numeric
 )
 
+
+
 # Combine all the data frames
 roc_data <- rbind( lasso_data, ridge_data)
 
@@ -177,4 +192,34 @@ ggplot() +
   scale_colour_brewer(palette = "Paired") +
   labs(x = "1 - Specificity", y = "Sensitivity", color = "Model") +
   theme_minimal()
+
+##### PREDICTING ACS #####
+
+acs_test = subset(acs_data, select = c(hhsize, female, hispanic, black, kids, elderly, education, married))
+acs_test = as.matrix(acs_test)
+
+acs_data = acs_data %>% 
+  mutate(
+    # note: ridge and lasso get the MATRIX
+    lasso_pred_prob = predict(final_lasso, acs_test, type = "response")[,1],
+    ridge_pred_prob = predict(final_ridge, acs_test, type = "response")[,1]
+    # note: all need tyoe = "response" so we don;t get log-odds
+  )
+
+acs_data
+
+
+puma_acs = acs_data %>% 
+  filter(elderly > 0) %>% 
+  group_by(PUMA=as.factor(PUMA)) %>%
+  summarise(mean_lasso_prob = weighted.mean(lasso_pred_prob, weights = weight),
+            #mean = weighted.mean(lasso_pre... , weights = weights in ACS)
+            mean_ridge_prob = weighted.mean(ridge_pred_prob, weights = weight),
+            senior_count = sum(elderly)) %>%ungroup()
+
+
+
+
+puma_acs[max(puma_acs$mean_lasso_prob) == puma_acs$mean_lasso_prob,]
+puma_acs[max(puma_acs$mean_ridge_prob) == puma_acs$mean_ridge_prob,]
 
