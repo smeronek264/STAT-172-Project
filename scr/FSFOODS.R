@@ -6,6 +6,9 @@ library(tidyverse) # for plotting
 library(pROC)
 library(glmnet) # for fitting lasso, ridge regressions (GLMs)
 library(lubridate) # for easily manipulating dates
+library(sf)
+library(dplyr) 
+library(tigris)
 
 # Loading the Data
 source("code/clean_cps.R") # clean CPS
@@ -182,14 +185,15 @@ roc_data <- rbind( lasso_data, ridge_data)
 
 
 # Plot the data
-ggplot() +
-  geom_line(aes(x = 1 - Specificity, y = Sensitivity, color = Model),data = roc_data) +
-  geom_text(data = roc_data %>% group_by(Model) %>% slice(1), 
-            aes(x = 0.75, y = c(0.75, 0.65, 0.55), colour = Model,
-                label = paste0(Model, " AUC = ", round(AUC, 3)))) +
-  scale_colour_brewer(palette = "Paired") +
-  labs(x = "1 - Specificity", y = "Sensitivity", color = "Model") +
-  theme_minimal()
+
+#ggplot() +
+#  geom_line(aes(x = 1 - Specificity, y = Sensitivity, color = Model),data = roc_data) +
+#  geom_text(data = roc_data %>% group_by(Model) %>% slice(1), 
+#            aes(x = 0.75, y = c(0.75, 0.65, 0.55), colour = Model,
+#                label = paste0(Model, " AUC = ", round(AUC, 3)))) +
+#  scale_colour_brewer(palette = "Paired") +
+#  labs(x = "1 - Specificity", y = "Sensitivity", color = "Model") +
+#  theme_minimal()
 
 
 
@@ -225,4 +229,36 @@ puma_acs = acs_data %>%
 
 puma_acs[max(puma_acs$mean_lasso_prob) == puma_acs$mean_lasso_prob,]
 puma_acs[max(puma_acs$mean_ridge_prob) == puma_acs$mean_ridge_prob,]
+
+
+
+##### PUMA Map #####
+
+
+# Set tigris options
+options(tigris_class = "sf")  # Use sf objects
+options(tigris_use_cache = TRUE)  # Cache shapefiles locally
+
+# Get PUMA shapefile for a specific state (e.g., Iowa)
+pumas <- pumas(state = "IA", year = 2022)  # Adjust state and year as needed
+
+# Add PUMA labels with color spectrum for senior_population
+ggplot(data = pumas) +
+  geom_sf(aes(fill = puma_acs$mean_lasso_prob), color = "black") +
+  scale_fill_gradient(
+    low = "lightblue", high = "darkblue",  # 
+    name = "Mean Lasso Probability"     
+  ) +
+  labs(
+    title = "PUMA Map for Food Security & Variety",
+    subtitle = "Public Use Microdata Areas (PUMAs) for Iowa",
+    caption = "Source: TIGER/Line Shapefiles"
+  ) +
+  theme_minimal()
+
+
+
+
+
+
 

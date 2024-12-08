@@ -6,6 +6,9 @@ library(tidyverse) # for plotting
 library(pROC)
 library(glmnet) # for fitting lasso, ridge regressions (GLMs)
 library(lubridate) # for easily manipulating dates
+library(sf)
+library(dplyr) 
+library(tigris)
 
 # Loading the Data
 source("code/clean_cps.R") # clean CPS
@@ -222,4 +225,34 @@ puma_acs = acs_data %>%
 
 puma_acs[max(puma_acs$mean_lasso_prob) == puma_acs$mean_lasso_prob,]
 puma_acs[max(puma_acs$mean_ridge_prob) == puma_acs$mean_ridge_prob,]
+
+
+
+##### PUMA Map #####
+
+
+# Set tigris options
+options(tigris_class = "sf")  # Use sf objects
+options(tigris_use_cache = TRUE)  # Cache shapefiles locally
+
+# Get PUMA shapefile for a specific state (e.g., Iowa)
+pumas <- pumas(state = "IA", year = 2022)  # Adjust state and year as needed
+
+# Add PUMA labels with color spectrum for senior_population
+ggplot(data = pumas) +
+  geom_sf(aes(fill = puma_acs$mean_lasso_prob), color = "black") +
+  scale_fill_gradient(
+    low = "lightblue", high = "darkblue",  # 
+    name = "Mean Lasso Probability"     
+  ) +
+  labs(
+    title = "PUMA Map for Household Food Security Score",
+    subtitle = "Public Use Microdata Areas (PUMAs) for Iowa",
+    caption = "Source: TIGER/Line Shapefiles"
+  ) +
+  theme_minimal()
+
+
+
+
 
