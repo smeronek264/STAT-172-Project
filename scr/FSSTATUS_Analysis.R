@@ -232,11 +232,11 @@ puma_acs[max(puma_acs$mean_ridge_prob) == puma_acs$mean_ridge_prob,]
 
 
 # Set tigris options
-options(tigris_class = "sf")  # Use sf objects
-options(tigris_use_cache = TRUE)  # Cache shapefiles locally
+options(tigris_class = "sf")
+options(tigris_use_cache = TRUE)
 
 # Get PUMA shapefile for a specific state (e.g., Iowa)
-pumas <- pumas(state = "IA", year = 2022)  # Adjust state and year as needed
+pumas <- pumas(state = "IA", year = 2022)
 
 # Add PUMA labels with color spectrum for senior_population
 ggplot(data = pumas) +
@@ -251,6 +251,10 @@ ggplot(data = pumas) +
     caption = "Source: TIGER/Line Shapefiles"
   ) +
   theme_minimal()
+
+
+
+
 
 
 
