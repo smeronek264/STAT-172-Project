@@ -34,12 +34,11 @@ While the ACS dataset does not include questions on food security, we will apply
 
 ### Data Preparation
 
-
 For data preparation, preparing the demographic portion of the data was the same for both CPS and ACS data.  This would involve turning different demographics such as age, race, gender, marital status, and education into a binary term (1 for true and 0 for false). One of the most important categories was ELDERLY since we are wanting to analyze their potential food insecurity.  
 
-Once we had created 
+Once we had created these binary variables, we needed to take the individual data to the household level.  This was done by grouping each household together and then taking the sum of all demographic attribute so we knew how many of each were in the household.  For example, if 4 individauls had 1 in the value for ELDERLY, then the household demographic would show 4 ELDERLY individauls.
 
-
+Since CPS data is our cleaning data, it holds the target varible or Y variables.  For cleaning the Y variables we would use a 1 to notate the existence of a the food insecurity.  For example, FSFOODS, which is the food variety and the amount of food indicator, is marked as 1 if they don't have enough food or enough variety of food.  These variables are the same for the entire household, so we will just take the first entry.
 
 ## Repository Structure
 
@@ -61,6 +60,25 @@ install.packages(c("tidyverse", "ggthemes", "logistf", "glmnet", "haven",
                    "sf", "dplyr", "tigris"))
 ```
 
+## Variables
+Below are a list of X variables that will be used to predict the Y variables.
+
+### Predictor Variables (X)
+-   **hhsize**: The number of people in a household 
+-   **female**: The number of females in a household 
+-   **hispanic**: The number of hispanic in a household 
+-   **black**: The number of black in a household 
+-   **kids**: The number of kids (younger than 18) in a household 
+-   **elderly**: The number of seniors (older than 60) in a household 
+-   **education**: The number of people with a college degree in a household 
+-   **married**: The number of people that are  married in a household 
+
+### Outcome Variables (Y)
+-   **FSFOODS**: The household doesn't have enough food and/or enough variety
+-   **FSSTATUS**: The household doesn't have food security
+
+
+
 ## Methods
 
 The analysis involves the following steps:
@@ -68,6 +86,9 @@ The analysis involves the following steps:
 1. Data cleaning and preprocessing.
 2. Training a predictive model using the CPS data.
 3. Applying the model to the ACS data to predict food insecurity in Iowa.
+4. Take the household predictions and bring up to the PUMA level
+
+
 
 
 
