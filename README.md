@@ -62,8 +62,6 @@ install.packages(c("tidyverse", "ggthemes", "logistf", "glmnet", "haven",
                    "sf", "dplyr", "tigris"))
 ```
 
-This project aims to predict food insecurity in households using predictor variables. The data includes demographic and household information, and the model focuses on identifying patterns linked to food insecurity outcomes.
-
 ## Variables
 
 Below is a list of predictor (X) variables used to predict the outcome (Y) variables.
