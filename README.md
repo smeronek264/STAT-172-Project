@@ -40,6 +40,8 @@ Once we had created these binary variables, we needed to take the individual dat
 
 Since CPS data is our cleaning data, it holds the target varible or Y variables.  For cleaning the Y variables we would use a 1 to notate the existence of a the food insecurity.  For example, FSFOODS, which is the food variety and the amount of food indicator, is marked as 1 if they don't have enough food or enough variety of food.  These variables are the same for the entire household, so we will just take the first entry.
 
+At the start of each analysis script, we would choose the variables to Y variable we were predicting and remove the others. Following that, the observations with missing Y data would removed since we wouldn't be able to test the accuracy.  Then we would split our data into 70% of the data used for training and 30% for testing our model.  Since we are using lasso and ridge regression, we would need to turn our data frames into matrixes.
+
 ## Repository Structure
 
 The repository contains the following key sections:
@@ -88,16 +90,19 @@ The analysis involves the following steps:
 3. Applying the model to the ACS data to predict food insecurity in Iowa.
 4. Take the household predictions and bring up to the PUMA level
 
-
-
-
-
+Once the code is cleaned, we needed to train our model suing the CPS data and test it for its accuracy.  For each Y varaible, we trained two bernoulli model with a logit link using Lasso (If a variable is not useful, then the coefficeint will be set to 0) and Ridge (If a variable is not useful, then the coefficeint will be close to 0).  Since we are trying to predict binary variables (a food insecurity exists or not) we will be using a logit link to keep the output between 0 and 1 since probabilility is between 0 and 1.  Then, each model will be evaulated using the testing data to choose a model that has the highest Area Under the Curve (AUC) on a ROC plot, since it will show which model predicts the most accurate.  Finally we will, use the final model to predict the ACS data and then take the weighted mean for each PUMA to view which one has the highest probability for the food insecurity.
 
 
 ## Code Execution
 
-The main script to run the analysis is `food_insecurity_analysis.R`. Ensure that all necessary data files are in the correct directory before executing the script.
+To reproduce our results:
 
+1. Download the CPS and ACS data from the provided links
+2. Download the files in `src/`
+3. Run the code to install packages
+4. Run the scripts titled `scr/FSFOODS.R` and `scr/FSSTATUS_Analysis.R`
+5. All interpretations are commented in the code
+6. Compare results to files in `output/` to check for similar results
 
 
 ## References
