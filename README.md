@@ -102,7 +102,7 @@ To reproduce our results:
 3. Run the code to install packages
 4. Run the scripts titled `scr/FSFOODS.R` and `scr/FSSTATUS_Analysis.R`
 5. All interpretations are commented in the code
-6. Compare results to files in `output/` to check for similar results
+6. Compare results to files in `outputs/` to check for similar results
 
 
 ## References
