@@ -1,3 +1,6 @@
+# NOTE: CHATGPT was utilized to add comments throughout the code
+# It was also used to create the PUMA maps
+
 ##### CLEARING THE ENVIRONMENT AND LOADING NECESSARY LIBRARIES #####
 # Removing all objects from the environment to ensure a clean workspace
 rm(list=ls())

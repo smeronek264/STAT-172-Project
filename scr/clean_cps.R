@@ -1,3 +1,6 @@
+# NOTE: CHATGPT was utilized to add comments throughout the code
+# CHATGPT was also used to create the categorization of faminc 
+
 # Clear the environment
 # Uncomment the following line only if you are testing the code
 # rm(list = ls())
