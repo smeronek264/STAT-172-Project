@@ -36,8 +36,8 @@ cps_data = cps_data %>%
 
 ##### EXPLORATORY ANALYSIS: Plotting food insecurity (FSFOODS) against various variables #####
 
-# 1. Food Insecurity Over Marital Status:
-# This plot shows the proportion of food insecurity across different marital status groups
+# 1. Food Insecurity Over Household Size:
+# This plot shows the proportion of food insecurity across different house hold sizes
 ggplot(data=cps_data) +
   geom_bar(aes(x=hhsize, fill=FSFOODS_factor), position="fill") +
   labs(x="Number of People", y="Proportion") +
