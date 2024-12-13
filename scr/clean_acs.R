@@ -1,3 +1,6 @@
+# NOTE: CHATGPT was utilized to add comments throughout the code
+# CHATGPT was also used to create the categorization of AGI 
+
 # Clear the environment
 # Uncomment the line below only if testing the code to remove all objects
 # rm(list = ls())
